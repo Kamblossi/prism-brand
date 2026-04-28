@@ -3,7 +3,7 @@ app_title = "PrismERP"
 app_publisher = "PrismTechCo"
 app_description = "PrismERP branding and user-facing identity layer"
 app_email = "newtonochieng@prismtechco.com"
-app_license = "MIT"
+app_license = "mit"
 
 # Apps
 # ------------------
