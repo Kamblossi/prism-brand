@@ -1,0 +1,17 @@
+/*
+PrismERP surface branding.
+
+This app owns user-facing PrismERP branding only:
+- logo
+- favicon
+- public theme
+- login/portal styling
+- email visual identity
+
+Do not place ERPNext business logic overrides here.
+*/
+
+:root {
+  --prism-primary: #1f3b73;
+  --prism-primary-dark: #14264a;
+}
