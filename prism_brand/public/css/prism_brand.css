@@ -12,6 +12,45 @@ Do not place ERPNext business logic overrides here.
 */
 
 :root {
-  --prism-primary: #1f3b73;
-  --prism-primary-dark: #14264a;
+	--prism-primary: #1f3b73;
+	--prism-primary-dark: #14264a;
+	--prism-primary-light: #eef3ff;
+	--prism-border: #d9e2f2;
+}
+
+/* General link and button accents */
+a {
+	color: var(--prism-primary);
+}
+
+.btn-primary,
+button.btn-primary {
+	background-color: var(--prism-primary);
+	border-color: var(--prism-primary);
+}
+
+.btn-primary:hover,
+button.btn-primary:hover {
+	background-color: var(--prism-primary-dark);
+	border-color: var(--prism-primary-dark);
+}
+
+/* Login surface */
+.page-card,
+.login-content .page-card {
+	border-radius: 16px;
+	box-shadow: 0 18px 45px rgba(31, 59, 115, 0.12);
+	border: 1px solid var(--prism-border);
+}
+
+/* Desk navbar accents */
+.navbar,
+.layout-side-section {
+	border-color: var(--prism-border);
+}
+
+/* Portal/website surface */
+.web-footer,
+footer {
+	border-top: 1px solid var(--prism-border);
 }
