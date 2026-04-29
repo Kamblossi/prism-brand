@@ -5,6 +5,20 @@ app_description = "PrismERP branding and user-facing identity layer"
 app_email = "newtonochieng@prismtechco.com"
 app_license = "mit"
 
+# Asset links
+app_logo_url = "/assets/prism_brand/images/prismerp-logo.svg"
+app_home = "/app"
+
+# Website context for Portal/Login
+website_context = {
+    "favicon": "/assets/prism_brand/images/favicon.svg",
+    "splash_image": "/assets/prism_brand/images/prismerp-logo.svg",
+}
+
+# CSS injection
+app_include_css = "/assets/prism_brand/css/prism_brand.css"
+web_include_css = "/assets/prism_brand/css/prism_brand.css"
+
 # Apps
 # ------------------
 
@@ -256,13 +270,3 @@ app_license = "mit"
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
-app_logo_url = "/assets/prism_brand/images/prismerp-logo.svg"
-app_home = "/app"
-
-website_context = {
-    "favicon": "/assets/prism_brand/images/favicon.svg",
-    "splash_image": "/assets/prism_brand/images/prismerp-logo.svg",
-}
-
-app_include_css = "/assets/prism_brand/css/prism_brand.css"
-web_include_css = "/assets/prism_brand/css/prism_brand.css"
