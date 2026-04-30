@@ -1,0 +1,23 @@
+{% extends "templates/web.html" %}
+
+{% block title %}Welcome to PrismERP{% endblock %}
+
+{% block page_content %}
+<div class="container py-5">
+	<img src="/assets/prism_brand/images/prismerp-logo.svg" alt="PrismERP" style="height: 48px; margin-bottom: 2rem;">
+	<h1>Welcome to PrismERP</h1>
+	<p>
+		Your business workspace is ready. Use your administrator account to continue setup.
+	</p>
+
+	<div class="mt-4">
+		<a class="btn btn-primary" href="/login">Login to PrismERP</a>
+	</div>
+
+	<hr>
+
+	<p>
+		Need help? Contact <a href="mailto:support@prismtechco.com">support@prismtechco.com</a>.
+	</p>
+</div>
+{% endblock %}
