@@ -1,115 +1,132 @@
 /*
-PrismERP surface branding.
-No ERPNext/Frappe business logic lives here.
+PrismERP Desk branding.
+
+Purpose:
+- Replace visible upstream product names in the Desk chrome.
+- Insert PrismERP logo where Frappe/ERPNext logo placeholders appear.
+- Keep changes presentation-only.
 */
 
-:root {
-	--prism-primary: #1f3b73;
-	--prism-primary-dark: #14264a;
-	--prism-primary-light: #eef3ff;
-	--prism-border: #d9e2f2;
-	--prism-text: #102033;
-	--prism-muted: #667085;
-}
+(function () {
+	const BRAND = "PrismERP";
+	const LOGO = "/assets/prism_brand/images/prismerp-logo.svg";
+	const FAVICON = "/assets/prism_brand/images/favicon.svg";
 
-/* General */
-a {
-	color: var(--prism-primary);
-}
+	const TEXT_REPLACEMENTS = [
+		["ERPNext", "PrismERP"],
+		["Frappe Framework", "PrismERP Core"],
+		["Frappe", "PrismERP"],
+		["Framework", "PrismERP Core"],
+	];
 
-.btn-primary,
-button.btn-primary {
-	background-color: var(--prism-primary);
-	border-color: var(--prism-primary);
-}
+	function replaceTextNode(node) {
+		if (!node || !node.nodeValue) return;
 
-.btn-primary:hover,
-button.btn-primary:hover {
-	background-color: var(--prism-primary-dark);
-	border-color: var(--prism-primary-dark);
-}
+		let value = node.nodeValue;
 
-/* Login page */
-body[data-path="login"],
-.for-login {
-	background:
-		radial-gradient(circle at top left, rgba(31, 59, 115, 0.14), transparent 32rem),
-		linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-}
+		for (const [from, to] of TEXT_REPLACEMENTS) {
+			value = value.replaceAll(from, to);
+		}
 
-.page-card,
-.login-content .page-card {
-	border-radius: 18px;
-	box-shadow: 0 20px 60px rgba(31, 59, 115, 0.14);
-	border: 1px solid var(--prism-border);
-}
+		if (value !== node.nodeValue) {
+			node.nodeValue = value;
+		}
+	}
 
-.page-card-head h4,
-.login-content h4 {
-	color: var(--prism-text);
-	font-weight: 700;
-}
+	function shouldSkip(parent) {
+		if (!parent) return true;
 
-/* Website navbar */
-.prismerp-brand-html {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.6rem;
-	font-weight: 700;
-	color: var(--prism-primary);
-}
+		const tag = parent.tagName;
+		return ["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "INPUT"].includes(tag);
+	}
 
-.prismerp-navbar-logo {
-	height: 28px;
-	width: auto;
-	display: inline-block;
-}
+	function replaceVisibleText(root) {
+		const walker = document.createTreeWalker(
+			root || document.body,
+			NodeFilter.SHOW_TEXT,
+			{
+				acceptNode: function (node) {
+					if (!node.nodeValue || !node.nodeValue.trim()) {
+						return NodeFilter.FILTER_REJECT;
+					}
 
-/* Desk */
-.prismerp-desk .navbar,
-.prismerp-desk .layout-side-section {
-	border-color: var(--prism-border);
-}
+					if (shouldSkip(node.parentElement)) {
+						return NodeFilter.FILTER_REJECT;
+					}
 
-.prismerp-desk .navbar-brand,
-.prismerp-desk .app-logo {
-	color: var(--prism-primary);
-	font-weight: 700;
-}
+					return NodeFilter.FILTER_ACCEPT;
+				},
+			}
+		);
 
-.prismerp-desk img[src*="prismerp-logo"] {
-	max-height: 32px;
-	width: auto;
-}
+		const nodes = [];
+		while (walker.nextNode()) nodes.push(walker.currentNode);
+		nodes.forEach(replaceTextNode);
+	}
 
-/* Workspace cards */
-.prismerp-desk .workspace-card,
-.prismerp-desk .standard-sidebar-item {
-	border-radius: 12px;
-}
+	function updateLogoImages() {
+		const selectors = [
+			".app-logo",
+			".navbar-brand img",
+			".standard-logo",
+			".layout-side-section img",
+			".sidebar-item-icon img",
+		];
 
-/* Portal / website */
-.web-footer,
-footer {
-	border-top: 1px solid var(--prism-border);
-}
+		document.querySelectorAll(selectors.join(",")).forEach((img) => {
+			if (img && img.tagName === "IMG") {
+				img.src = LOGO;
+				img.alt = BRAND;
+			}
+		});
+	}
 
-.prismerp-hero {
-	padding: 5rem 0;
-	background:
-		radial-gradient(circle at top left, rgba(31, 59, 115, 0.14), transparent 30rem),
-		linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-}
+	function updateFavicon() {
+		let favicon = document.querySelector("link[rel='shortcut icon'], link[rel='icon']");
 
-.prismerp-hero h1 {
-	font-size: clamp(2.2rem, 5vw, 4rem);
-	font-weight: 800;
-	color: var(--prism-text);
-	letter-spacing: -0.04em;
-}
+		if (!favicon) {
+			favicon = document.createElement("link");
+			favicon.rel = "icon";
+			document.head.appendChild(favicon);
+		}
 
-.prismerp-hero p {
-	font-size: 1.15rem;
-	color: var(--prism-muted);
-	max-width: 680px;
-}
+		favicon.href = FAVICON;
+	}
+
+	function updateTitle() {
+		if (document.title) {
+			let title = document.title;
+			for (const [from, to] of TEXT_REPLACEMENTS) {
+				title = title.replaceAll(from, to);
+			}
+			document.title = title;
+		}
+	}
+
+	function addPrismBodyClass() {
+		document.body.classList.add("prismerp-desk");
+	}
+
+	function applyDeskBranding() {
+		addPrismBodyClass();
+		updateTitle();
+		updateFavicon();
+		updateLogoImages();
+		replaceVisibleText(document.body);
+	}
+
+	document.addEventListener("DOMContentLoaded", function () {
+		applyDeskBranding();
+
+		const observer = new MutationObserver(function () {
+			applyDeskBranding();
+		});
+
+		observer.observe(document.body, {
+			childList: true,
+			subtree: true,
+			attributes: true,
+			attributeFilter: ["src", "title", "aria-label"],
+		});
+	});
+})();
