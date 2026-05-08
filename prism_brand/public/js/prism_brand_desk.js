@@ -1,18 +1,19 @@
 /*
-PrismERP Desk branding — safe, targeted version.
+PrismERP Desk branding — v2 (fixed sidebar subtitle flickering).
+
+Fixes:
+- Sidebar subtitle flickering: instead of DOM text replacement (which gets
+  overwritten when Frappe re-renders the sidebar on workspace navigation),
+  we override frappe.ui.Sidebar.prototype.choose_app_name() to always set
+  header_subtitle = "PrismERP". This fixes the root cause.
+- Workspace card title rename: "ERPNext Settings" → "PrismERP Settings" is
+  handled by a database patch (patches/v0_1_0/rename_erpnext_settings_workspace.py).
 
 This file intentionally avoids:
 - MutationObserver watching the whole document
 - whole-document text scanning
 - repeated DOM rewrites
 - recursive image updates
-
-What it does:
-- Sets favicon once
-- Sets document title once
-- Adds prismerp-desk body class once
-- Replaces workspace sidebar subtitle "ERPNext" with "PrismERP" (targeted, multi-retry)
-- Overrides the About dialog with custom PrismERP content
 */
 
 (function () {
@@ -43,24 +44,6 @@ What it does:
     if (document.body) {
       document.body.classList.add("prismerp-desk");
     }
-  }
-
-  /* --- Workspace subtitle replacement --- */
-  function replaceWorkspaceSubtitle() {
-    // Target any element that looks like a workspace/sidebar subtitle
-    var subtitles = document.querySelectorAll(
-      ".header-subtitle, " +
-      ".sidebar-subtitle, " +
-      ".workspace-label .header-subtitle, " +
-      ".desk-sidebar .header-subtitle, " +
-      ".sidebar-header .header-subtitle"
-    );
-    subtitles.forEach(function (el) {
-      var text = el.textContent.trim();
-      if (text === "ERPNext") {
-        el.textContent = BRAND;
-      }
-    });
   }
 
   /* --- About dialog override --- */
@@ -95,16 +78,40 @@ What it does:
     ].join("");
 
     frappe.ui.misc.about = function () {
-      // Always recreate to ensure fresh content (no stale cache)
       if (frappe.ui.misc.about_dialog) {
         frappe.ui.misc.about_dialog.hide();
         frappe.ui.misc.about_dialog = null;
       }
 
-      var dialog = new frappe.ui.Dialog({ title: __("PrismERP") });
+      var dialog = new frappe.ui.Dialog({ title: __(BRAND) });
       $(dialog.body).html(aboutHtml);
       frappe.ui.misc.about_dialog = dialog;
       dialog.show();
+    };
+  }
+
+  /* --- FIX: Override sidebar subtitle at source ---
+   *
+   * Root cause of flickering: frappe.ui.Sidebar.prototype.choose_app_name()
+   * resolves the subtitle from frappe.boot.app_data → "ERPNext" for any
+   * workspace belonging to the erpnext app. Every workspace navigation
+   * triggers setup() → prepare() → choose_app_name() → make(), which
+   * re-renders the sidebar header and overwrites our DOM text replacement.
+   *
+   * Fix: Wrap choose_app_name() to force header_subtitle = "PrismERP"
+   * after the original method runs. This happens at the data level, before
+   * the template is rendered, so there is no flicker.
+   */
+  function overrideSidebarSubtitle() {
+    if (typeof frappe === "undefined") return;
+    if (!frappe.ui || !frappe.ui.Sidebar) return;
+
+    var originalChooseAppName = frappe.ui.Sidebar.prototype.choose_app_name;
+    frappe.ui.Sidebar.prototype.choose_app_name = function () {
+      // Run original to set up frappe.current_app and other state
+      originalChooseAppName.call(this);
+      // Override the subtitle that will be rendered in the sidebar header
+      this.header_subtitle = BRAND;
     };
   }
 
@@ -115,37 +122,16 @@ What it does:
     addBodyClassOnce();
   }
 
-  /* --- Multi-retry subtitle replacement for async rendering --- */
-  function scheduleSubtitleReplacement() {
-    var delays = [200, 800, 2000, 5000];
-    delays.forEach(function (delay) {
-      setTimeout(replaceWorkspaceSubtitle, delay);
-    });
-  }
-
   /* --- Bootstrap --- */
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function () {
       applySafeBranding();
       overrideAboutDialog();
-      replaceWorkspaceSubtitle();
-      scheduleSubtitleReplacement();
+      overrideSidebarSubtitle();
     }, { once: true });
   } else {
     applySafeBranding();
     overrideAboutDialog();
-    replaceWorkspaceSubtitle();
-    scheduleSubtitleReplacement();
-  }
-
-  /* --- Hook into Frappe route change --- */
-  if (typeof frappe !== "undefined") {
-    if (frappe.router) {
-      var originalOnChange = frappe.router.on_change;
-      frappe.router.on_change = function () {
-        if (originalOnChange) originalOnChange.apply(this, arguments);
-        scheduleSubtitleReplacement();
-      };
-    }
+    overrideSidebarSubtitle();
   }
 })();
