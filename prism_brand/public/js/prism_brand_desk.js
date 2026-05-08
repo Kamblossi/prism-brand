@@ -65,6 +65,9 @@ What it does:
     if (typeof frappe === "undefined") return;
     frappe.provide("frappe.ui.misc");
 
+    // Clear any cached dialog from previous sessions
+    frappe.ui.misc.about_dialog = null;
+
     var aboutHtml = [
       "<div>",
       "  <p><strong>PrismERP</strong></p>",
@@ -89,9 +92,10 @@ What it does:
     ].join("");
 
     frappe.ui.misc.about = function () {
+      // Always recreate to ensure fresh content (no stale cache)
       if (frappe.ui.misc.about_dialog) {
-        frappe.ui.misc.about_dialog.show();
-        return;
+        frappe.ui.misc.about_dialog.hide();
+        frappe.ui.misc.about_dialog = null;
       }
 
       var dialog = new frappe.ui.Dialog({ title: __("PrismERP") });
