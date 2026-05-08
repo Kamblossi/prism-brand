@@ -11,8 +11,8 @@ What it does:
 - Sets favicon once
 - Sets document title once
 - Adds prismerp-desk body class once
-- Replaces workspace sidebar subtitle "ERPNext" with "PrismERP" (targeted, on route change)
-- Overrides the About dialog with custom PrismERP content (replaces frappe.ui.misc.about)
+- Replaces workspace sidebar subtitle "ERPNext" with "PrismERP" (targeted, multi-retry)
+- Overrides the About dialog with custom PrismERP content
 */
 
 (function () {
@@ -47,14 +47,17 @@ What it does:
 
   /* --- Workspace subtitle replacement --- */
   function replaceWorkspaceSubtitle() {
+    // Target any element that looks like a workspace/sidebar subtitle
     var subtitles = document.querySelectorAll(
-      ".sidebar-item-label.header-subtitle, " +
-      ".sidebar-label.header-subtitle, " +
-      ".workspace-sidebar .sidebar-subtitle, " +
-      ".desk-sidebar .header-subtitle"
+      ".header-subtitle, " +
+      ".sidebar-subtitle, " +
+      ".workspace-label .header-subtitle, " +
+      ".desk-sidebar .header-subtitle, " +
+      ".sidebar-header .header-subtitle"
     );
     subtitles.forEach(function (el) {
-      if (el.textContent.trim() === "ERPNext") {
+      var text = el.textContent.trim();
+      if (text === "ERPNext") {
         el.textContent = BRAND;
       }
     });
@@ -112,10 +115,12 @@ What it does:
     addBodyClassOnce();
   }
 
-  /* --- Route change handler --- */
-  function onRouteChange() {
-    setTimeout(replaceWorkspaceSubtitle, 200);
-    setTimeout(replaceWorkspaceSubtitle, 800);
+  /* --- Multi-retry subtitle replacement for async rendering --- */
+  function scheduleSubtitleReplacement() {
+    var delays = [200, 800, 2000, 5000];
+    delays.forEach(function (delay) {
+      setTimeout(replaceWorkspaceSubtitle, delay);
+    });
   }
 
   /* --- Bootstrap --- */
@@ -124,11 +129,13 @@ What it does:
       applySafeBranding();
       overrideAboutDialog();
       replaceWorkspaceSubtitle();
+      scheduleSubtitleReplacement();
     }, { once: true });
   } else {
     applySafeBranding();
     overrideAboutDialog();
     replaceWorkspaceSubtitle();
+    scheduleSubtitleReplacement();
   }
 
   /* --- Hook into Frappe route change --- */
@@ -137,7 +144,7 @@ What it does:
       var originalOnChange = frappe.router.on_change;
       frappe.router.on_change = function () {
         if (originalOnChange) originalOnChange.apply(this, arguments);
-        onRouteChange();
+        scheduleSubtitleReplacement();
       };
     }
   }
