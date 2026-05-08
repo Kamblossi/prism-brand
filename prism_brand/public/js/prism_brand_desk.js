@@ -46,6 +46,17 @@ This file intentionally avoids:
     }
   }
 
+  /* --- Footer branding fix ---
+   * Replace "Powered by ERPNext" in login page footer with "Powered by PrismERP"
+   */
+  function updateFooterOnce() {
+    var powered = document.querySelector(".footer-powered a");
+    if (powered && powered.textContent.indexOf("ERPNext") !== -1) {
+      powered.textContent = "PrismERP";
+      powered.href = "https://prismtechco.com";
+    }
+  }
+
   /* --- About dialog override --- */
   function overrideAboutDialog() {
     if (typeof frappe === "undefined") return;
@@ -120,6 +131,7 @@ This file intentionally avoids:
     updateFaviconOnce();
     updateTitleOnce();
     addBodyClassOnce();
+    updateFooterOnce();
   }
 
   /* --- Bootstrap --- */
